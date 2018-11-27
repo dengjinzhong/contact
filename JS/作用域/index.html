@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>作用域</title>
+</head>
+<body>
+    <script>
+        function test(o) {
+            var i = o;                           //i 在整个函数体内均有定义的
+            if(typeof o == "object") {          
+                var j = o;                       //j 在整个函数体内均有定义的，不仅仅是这个代码段内
+                for(var k = 0; k < 10; k++) {    //j 在整个函数体内均有定义的，不仅仅是这个循环内
+                    console.log(k);              //如果传入的参数是一个object,则输出0-9
+                }
+                console.log(k);                  //k已经定义输出10
+            }
+            console.log(j);                      //j已经定义了，如果传入参数不是一个object,则为undefined
+        }
+        test({a:1});
+        test(1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+*{margin:0;padding:0;font-family: Arial;touch-action: none;}
+a{text-decoration:none;}
+ul,li{list-style:none;}
+header{
+	display:block;
+	margin:0 auto;
+	width:500px;
+	text-align:center;
+}
+header h1{
+    font-size: 60px;
+    font-weight: bold;
+}
+header #newgameButton{
+	display:block;
+	background:#8f7a66;
+	margin:20px auto;
+	color:#fff;
+	width:100px;
+	border-radius: 10px;
+	padding:10px 10px;
+}
+header #newgameButton:hover{
+	background:#9f8b77;
+}
+header p{
+	font-size:25px;
+	margin:20px auto;
+}
+#content{
+	position:relative;
+    margin:50px auto;
+    background-color:#bbada0;
+    border-radius: 10px;
+}
+#content .grid-cell{
+	position:absolute;
+    border-radius: 6px;
+    background-color:#ccc0b3;
+    
+}
+#content .number-cell{
+	position:absolute;
+    border-radius: 6px;
+    text-align:center;
+    font-size:60px;
+    line-height:100px;
+    font-weight:bold;
+    /*display:none;*/
+}
