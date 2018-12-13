@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<style>
+			.title {
+				background: #C0C0C0;
+				color: #888888;
+			}
+			.title th,td {
+				text-align: center;
+				padding: 4px 30px;
+			}
+			.content td{
+				border: 1px solid #000000;
+			}
+		</style>
+	</head>
+	<body>
+		<form action="" name="index">
+			姓名：<input type="text" name="name">
+			电话：<input type="text" name="phone">
+			地址：<input type="text" name="address">
+			<button type="button" class="create">添加</button>
+			<button type="button" class="delete">删除数据库</button><br /><br />
+			姓名：<input type="text" name="search">
+			<button type="button" class="search">查询</button>
+		</form>
+		<br />
+		<table id="table">
+			<tr class="title">
+				<th>姓名</th>
+				<th>电话</th>
+				<th>地址</th>
+				<th>删除</th>
+			</tr>
+			</tabel>
+			<script type="text/javascript">
+				window.onload = function() {
+					var indexedDb = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+					var db,
+						index = 0,
+						arrayKey = [],
+						openRequest,
+						lastCursor,
+						createEle = document.querySelector('.create'),
+						searchEle = document.querySelector('.search'),
+						deleteBtn = document.querySelector('.delete'),
+						dbName = "person",
+						tableName = "textTable";
+					createEle.addEventListener('click', add);
+					searchEle.addEventListener('click', seletDB);
+					deleteBtn.addEventListener('click', deleteDB);
+					init(tableName);
+
+					//打开数据库
+					function init(tableName) {
+						openRequest = indexedDb.open(tableName);
+						//一个新的数据库被创建或被修改的时候触发
+						openRequest.onupgradeneeded = function(e) {
+							console.log("running onupgradeneeded");
+							var thisDb = e.target.result;
+							console.log(thisDb.version);
+							//如果不存在tableName这个表那么就新建一个
+							if (!thisDb.objectStoreNames.contains(tableName)) {
+								console.log("I need to create the objectstore");
+								var objectStore = thisDb.createObjectStore(
+									tableName, {
+										keyPath: "id", //主键
+										autoIncrement: true
+									}
+								);
+								//指定两个唯一可以索引的字段
+								objectStore.createIndex("name", "name", {
+									unique: false
+								});
+								objectStore.createIndex("phone", "phone", {
+									unique: false
+								});
+							}
+						};
+						//打开数据库成功触发
+						openRequest.onsuccess = function(event) {
+							db = event.target.result;
+							readAll();
+							console.log("打开数据库成功！")
+						}
+						//打开数据库失败时触发
+						openRequest.onerror = function(event) {
+							console.log("打开数据库失败");
+						}
+					}
+
+					//新建列表元素
+					function create(person) {
+						var parent = document.getElementById("table"),
+							tr = document.createElement("tr"),
+							td1 = document.createElement("td"),
+							td2 = document.createElement("td"),
+							td3 = document.createElement("td"),
+							td4 = document.createElement("td");
+						tr.setAttribute("id", person.key);
+						tr.classList.add('content');
+						td1.innerHTML = person.name;
+						td2.innerHTML = person.phone;
+						td3.innerHTML = person.address;
+						td4.innerHTML = "<button class='del'>删除</button>";
+						tr.appendChild(td1);
+						tr.appendChild(td2);
+						tr.appendChild(td3);
+						tr.appendChild(td4);
+						parent.appendChild(tr);
+						var delEle = document.querySelectorAll('.del');
+						delEle[delEle.length - 1].addEventListener('click', del);
+					}
+
+					//添加数据
+					function add() {
+						var form = document.index,
+							err;
+						var name = form.name.value,
+							phone = form.phone.value,
+							address = form.address.value,
+							person = {
+								name: name,
+								phone: phone,
+								address: address
+							};
+						try {
+							if (name == '') throw "姓名不能为空";
+							if (phone == '') throw "电话不能为空";
+							if (address == '') throw "地址不能为空";
+						} catch (err) {
+							console.log(err);
+							index--;
+							return;
+						}
+						var transaction = db.transaction([tableName], "readwrite");
+						transaction.oncomplete = function(event) {
+							console.log("transaction complete");
+						}
+						transaction.onerror = function(event) {
+							console.dir(event);
+						}
+						var objectStore = transaction.objectStore(tableName);
+						objectStore.add(person);
+						objectStore.openCursor().onsuccess = function(event) {
+							cursor = event.target.result;
+							var key;
+							if (lastCursor == null) {
+								key = cursor.key;
+								lastCursor = key;
+							} else {
+								key = ++lastCursor;
+							}
+							create({
+								key: key,
+								name: name,
+								phone: phone,
+								address: address
+							});
+							console.log("数据添加成功" + key);
+						}
+
+					}
+
+					//读取数据库
+					function readAll() {
+						var transaction = db.transaction(tableName)
+
+						//事务成功监听函数
+						transaction.oncomplete = function(event) {
+							console.log("transaction complete");
+						}
+						transaction.onerror = function(event) {
+							console.dir(event);
+						}
+						var objectStore = transaction.objectStore(tableName);
+						//使用游标遍历
+						objectStore.openCursor().onsuccess = function(event) {
+							var cursor = event.target.result;
+							if (cursor) {
+								console.log(cursor.key);
+								console.dir(cursor.value);
+								create({
+									key: cursor.key,
+									name: cursor.value["name"],
+									phone: cursor.value["phone"],
+									address: cursor.value["address"]
+								});
+								lastCursor = cursor.key;
+								cursor.continue(); //下一条
+							} else {
+								console.log("没有更多数据了");
+							}
+						}
+						objectStore.openCursor().onerror = function(event) {
+							console.dir(event)
+						}
+
+					}
+
+					//删除数据
+					function del(event) {
+						var child = event.toElement.parentNode.parentNode,
+							id = child.getAttribute("id"),
+							parent = child.parentNode;
+						var transaction = db.transaction(tableName, 'readwrite')
+
+						//事务成功监听函数
+						transaction.oncomplete = function(event) {
+							console.log("transaction complete");
+						}
+						transaction.onerror = function(event) {
+							console.dir(event);
+						}
+						var objectStore = transaction.objectStore(tableName); //得到objectStore对象
+						var removeKey = parseInt(id);
+						var request = objectStore.delete(removeKey);
+						request.onsuccess = function(e) {
+							console.log("成功删除");
+							var child = event.toElement.parentNode.parentNode;
+							parent.removeChild(child);
+						};
+						request.onerror = function(e) {
+							console.log("删除失败")
+						}
+					}
+
+					//查询数据
+					function seletDB() {
+						var curName = document.index.search.value;
+						var transaction = db.transaction(tableName, 'readonly')
+
+						//事务成功监听函数
+						transaction.oncomplete = function(event) {
+							console.log("transaction complete");
+						}
+						transaction.onerror = function(event) {
+							console.dir(event);
+						}
+						var objectStore = transaction.objectStore(tableName);
+						var boundKeyRange = IDBKeyRange.only(curName);
+						var index = 0;
+						objectStore.index("name").openCursor(boundKeyRange).onsuccess = function(event) {
+							var cursor = event.target.result;
+							if (!cursor) {
+								if (index == 0) {
+									console.log("查询无果")
+								}
+								return;
+							}
+							var trEle = document.querySelector('.content');
+							var parent = document.getElementById('table');
+							while (trEle && index == 0) {
+								parent.removeChild(trEle);
+								trEle = document.querySelector('.content');
+							}
+							index++;
+							var rowData = cursor.value;
+							create({
+								key: rowData.id,
+								name: rowData.name,
+								phone: rowData.phone,
+								address: rowData.address
+							})
+
+							cursor.continue();
+						}
+					}
+
+					//删除数据库
+					function deleteDB() {
+						var DBDeleteRequest = indexedDb.deleteDatabase('textTable');
+
+						DBDeleteRequest.onerror = function(event) {
+							console.log('Error');
+						};
+
+						DBDeleteRequest.onsuccess = function(event) {
+							console.log('success');
+						};
+						var trEle = document.querySelector('.content');
+						var parent = document.getElementById('table');
+						while (trEle) {
+							parent.removeChild(trEle);
+							trEle = document.querySelector('.content');
+						}
+						
+					}
+				}
+			</script>
+	</body>
+</html>
