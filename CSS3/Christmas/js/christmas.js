@@ -52,38 +52,38 @@ var mp3 = {
 	audio1: 'http://cdnringuc.shoujiduoduo.com/ringres/user/a24/441/34089441.aac',
 	audio2: 'http://cdnringuc.shoujiduoduo.com/ringres/user/a24/407/25292407.aac',
 	audio3: 'http://att.chinauui.com/day_181105/20181105_13417bb2c3bab6561208W4bfkBsKg48n.mp3'
-	
+
 }
 $(function() {
 	var audio1 = new Audio(mp3.audio1);
 	var audio2, audio3;
 	audio1.play();
-	ChristmasA()
-		.then(function() {
-			return AGoB();
-		})
-		.then(function() {
-			audio1.pause();
-			audio2 = new Audio(mp3.audio2);
-			audio2.play();
-		})
-		.then(function() {
-			return ChristmasB();
-		})
-		.then(function() {
-			return BGoC();
-		})
-		.then(function() {
-			audio2.pause();
-			var audio3 = new Audio(mp3.audio3);
-			audio3.play();
-		})
-		.then(function() {
-			//页面容器元素
-			var $pageC = $(".page-c");
-			//构建第三个场景页面对象
-			new pageC($pageC);
-		})
-
-
+	setTimeout(function() {
+		ChristmasA()
+			.then(function() {
+				return AGoB();
+			})
+			.then(function() {
+				audio1.pause();
+				audio2 = new Audio(mp3.audio2);
+				audio2.play();
+			})
+			.then(function() {
+				return ChristmasB();
+			})
+			.then(function() {
+				return BGoC();
+			})
+			.then(function() {
+				audio2.pause();
+				var audio3 = new Audio(mp3.audio3);
+				audio3.play();
+			})
+			.then(function() {
+				//页面容器元素
+				var $pageC = $(".page-c");
+				//构建第三个场景页面对象
+				new pageC($pageC);
+			})
+	}, 5000)
 })
